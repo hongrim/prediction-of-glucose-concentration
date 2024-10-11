@@ -11,13 +11,13 @@ data = pd.read_excel(file_path)
 
 X = data.copy()
 scaler = StandardScaler()
-X[[  'Z(f=100)', 'Z(f=1000)', 'Z(f=10000)','Z contact', 'Temperature',
+X[[  'Z(f=100)', 'Z(f=1000)', 'Z(f=10000)','R contact', 'Temperature',
             'θ(f=100)','θ(f=1000)', 'θ(f=10000)']] = scaler.fit_transform(
     X[[   'Z(f=100)', 'Z(f=1000)',  'Z(f=10000)','Z contact','Temperature',
             'θ(f=100)', 'θ(f=1000)','θ(f=10000)']])
 X['Concentration'] = data['Concentration']
 
-formula = 'Concentration ~  Q("Z(f=100)") +Q("Z(f=1000)") + Q("Z(f=10000)") + Q("Z contact")+ Temperature+ Q("θ(f=100)") +Q("θ(f=1000)") + Q("θ(f=10000)")  '
+formula = 'Concentration ~  Q("Z(f=100)") +Q("Z(f=1000)") + Q("Z(f=10000)") + Q("R contact")+ Temperature+ Q("θ(f=100)") +Q("θ(f=1000)") + Q("θ(f=10000)")  '
 model = smf.ols(formula, data=X)
 result_ols = model.fit()
 
