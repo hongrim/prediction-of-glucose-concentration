@@ -1,0 +1,44 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+models = ['RF', 'FFNN']
+
+indicators = ['MSE', 'RMSE', 'MAE', 'R²', 'Correlation Coefficient']
+
+data = {
+    'RF': [rf_mse, rf_rmse, rf_mae, rf_r2, rf_corr],
+    'FFNN': [ffnn_mse, ffnn_rmse, ffnn_mae, ffnn_r2, ffnn_corr],
+}
+
+indicator_ranges = {
+    'MSE': (0, 100),
+    'RMSE': (0, 15),
+    'MAE': (0, 150),
+    'R²': (0, 1),
+    'Correlation Coefficient': (0, 1),
+}
+
+colors = ['#8A7197','#3E608D' ] 
+
+angles = np.linspace(0, 2 * np.pi, len(indicators), endpoint=False).tolist()
+angles += angles[:1] 
+
+fig, ax = plt.subplots(subplot_kw={'polar': True})
+
+for i, model in enumerate(models):
+    values = data[model]
+
+    normalized_values = [(x - indicator_ranges[indicators[i]][0]) / (indicator_ranges[indicators[i]][1] - indicator_ranges[indicators[i]][0]) for i, x in enumerate(values)]
+    
+    normalized_values += normalized_values[:1]  
+    ax.fill(angles, normalized_values, color=colors[i], alpha=0.25, label=model)  
+    ax.plot(angles, normalized_values, color=colors[i], linewidth=2, linestyle='solid') 
+
+ax.set_xticks(angles[:-1])
+ax.set_xticklabels(indicators)
+
+ax.set_ylim(0, 1)
+
+plt.legend(loc='upper right', bbox_to_anchor=(1.1, 1.1))
+
+plt.show()
