@@ -1,0 +1,68 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.linear_model import LinearRegression
+
+file_path = r'inter.xlsx'
+data = pd.read_excel(file_path)
+
+X = data[['Z(f=100)','Z(f=1000)', 'Z(f=10000)', 'θ(f=100)',  'θ(f=10000)', 'Temperature', 'R contact']]
+y = data['Concentration']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_train_pred = model.predict(X_train)
+y_test_pred = model.predict(X_test)
+
+train_mse = mean_squared_error(y_train, y_train_pred)
+mlr_mse = mean_squared_error(y_test, y_test_pred)
+train_r2 = r2_score(y_train, y_train_pred)
+mlr_r2 = r2_score(y_test, y_test_pred)
+mlr_rmse = np.sqrt(mlr_mse)
+mlr_mae = mean_absolute_error(y_test, y_test_pred)
+mlr_corr = np.corrcoef(y_test, y_test_pred)[0, 1]
+
+print("Train Mean Squared Error (MSE):", train_mse)
+print("Test Mean Squared Error (MSE):", mlr_mse)
+print("Train R^2 Score:", train_r2)
+print("Test R^2 Score:", mlr_r2)
+
+plt.figure(figsize=(5, 5))
+
+color_train = (78/255, 101/255, 155/255)  
+color_test = (144/255, 69/255, 80/255)  
+
+plt.scatter(y_test, y_test_pred, color=color_test, label='Test Data', s=15)
+plt.scatter(y_train, y_train_pred, color=color_train, label='Train Data', s=15)
+
+plt.xlabel('Actual Concentration')
+plt.ylabel('Predicted Concentration')
+
+plt.xticks([0, 50, 100, 150, 200, 250, 300, 350, 400])
+plt.yticks([0, 50, 100, 150, 200, 250, 300, 350, 400])
+plt.xlim(0, 400)
+plt.ylim(0, 400)
+plt.axis('equal')
+
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color='gray', linestyle='--')
+
+plt.legend()
+
+for spine in plt.gca().spines.values():
+    spine.set_edgecolor('black')
+
+plt.tick_params(axis='both', which='both', direction='out', bottom=True, top=False, left=True, right=False)
+plt.grid(False)
+
+plt.show()
