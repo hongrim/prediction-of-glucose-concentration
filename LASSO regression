@@ -6,7 +6,7 @@ import statsmodels.formula.api as smf
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
-file_path = r'D:\python\nafion\F\nafion\1\inter.xlsx'
+file_path = r'inter.xlsx'
 data = pd.read_excel(file_path)
 
 X = data.copy()
