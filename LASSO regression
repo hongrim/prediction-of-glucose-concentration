@@ -1,0 +1,81 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+
+file_path = r'D:\python\nafion\F\nafion\1\inter.xlsx'
+data = pd.read_excel(file_path)
+
+X = data.copy()
+scaler = StandardScaler()
+X[[  'Z(f=100)', 'Z(f=1000)', 'Z(f=10000)','Z contact', 'Temperature',
+            'θ(f=100)','θ(f=1000)', 'θ(f=10000)']] = scaler.fit_transform(
+    X[[   'Z(f=100)', 'Z(f=1000)',  'Z(f=10000)','Z contact','Temperature',
+            'θ(f=100)', 'θ(f=1000)','θ(f=10000)']])
+X['Concentration'] = data['Concentration']
+
+formula = 'Concentration ~  Q("Z(f=100)") +Q("Z(f=1000)") + Q("Z(f=10000)") + Q("Z contact")+ Temperature+ Q("θ(f=100)") +Q("θ(f=1000)") + Q("θ(f=10000)")  '
+model = smf.ols(formula, data=X)
+result_ols = model.fit()
+
+alpha = 10**np.linspace(-2, 4, 100)
+betaols_l1 = np.sum(np.abs(result_ols.params))
+
+params_l1 = {}
+params2_l1 = {}
+for a in alpha:
+    result = model.fit_regularized(L1_wt=1, alpha=a)
+    params = result.params
+    params_l1[a] = params
+    rate = np.sum(np.abs(params)) / betaols_l1
+    params2_l1[rate] = params
+
+plt.rcParams['font.family'] = 'Arial'
+
+params_l1 = pd.DataFrame(params_l1).T
+params2_l1 = pd.DataFrame(params2_l1).T
+del params_l1['Intercept']
+del params2_l1['Intercept']
+
+line_colors = [
+    '#073E7F', 
+    '#866AA3',
+    '#F49600', 
+    '#561319', 
+    '#29A15C', 
+    '#5D8B9D', 
+    '#FFD700', 
+    '#87CEEB'  
+]
+plt.figure(figsize=(10, 6))
+lines = []
+for i, column in enumerate(params_l1.columns):
+    line = sns.lineplot(data=params_l1[column], color=line_colors[i])
+    lines.append(line)
+
+plt.axhline(y=0, lw=0.1, color='black')
+
+plt.gca().xaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
+plt.gca().set_xticks(alpha[::10])
+plt.gca().set_xticklabels([f'10^-2' if val == -2 else f'10^-1' if val == -1 else f'10^1' if val == 1 else f'10^2' if val == 2 else f'10^3' if val == 3 else f'10^4' for val in np.linspace(-2, 4, 100)][::10], fontsize=14)
+
+plt.yticks(fontsize=14)
+plt.xscale('log')
+plt.ylabel('Coefficients', size=14)
+plt.xlabel('α', size=14)
+
+for spine in plt.gca().spines.values():
+    spine.set_edgecolor('black')
+
+plt.tick_params(axis='both', which='both', direction='out', bottom=True, top=False, left=True, right=False)
+
+legend_labels = [  'Impedance corresponding to 100 Hz','Impedance corresponding to 1k Hz', 'Impedance corresponding to 10k Hz',  'Contact resistance','Temperature', 'Phase corresponding to 100 Hz',  'Phase corresponding to 1k Hz','Phase corresponding to 10k Hz']
+
+proxy_artists = [plt.Line2D([0], [0], color=line_colors[i], label=legend_labels[i]) for i in range(len(legend_labels))]
+
+plt.legend(handles=proxy_artists)
+plt.grid(False) 
+plt.show()
