@@ -1,0 +1,42 @@
+from scipy.interpolate import CubicSpline
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+data = pd.read_csv(r'dataset.csv')
+
+x = data['Concentration']
+y_Z = data['Temperature']
+
+x_unique, indices = np.unique(x, return_index=True)
+y_Z_unique = y_Z[indices]
+mean_values = [np.mean(y_Z[x == xi]) for xi in x_unique]
+std_values = [np.std(y_Z[x == xi]) for xi in x_unique]
+
+cubic_interp = CubicSpline(x_unique, mean_values)
+
+x_interp = np.linspace(min(x_unique), max(x_unique), 1000)
+
+std_interp = np.interp(x_interp, x_unique, std_values)
+
+np.random.seed(0)  
+fluctuations = np.random.normal(0, std_interp, len(x_interp))
+
+plt.figure(figsize=(8, 3))
+
+plt.errorbar(x_unique, mean_values, yerr=std_values, fmt='o', label='Mean with Error Bars')
+
+plt.plot(x_interp, cubic_interp(x_interp) + fluctuations, label='Cubic Spline Interpolation with Fluctuations')
+plt.xlabel('Concentration (mg/dL)')
+plt.ylabel('Z (Ω)')
+
+plt.grid(False) 
+plt.legend()
+plt.show()
+
+interpolated_data = pd.DataFrame({'Concentration': x_interp, 'Interpolated_Temperature': cubic_interp(x_interp) + fluctuations})
+
+save_path = r'inter.xlsx'
+interpolated_data.to_excel(save_path, index=False)
+
+print("Interpolated data saved to:", save_path)
